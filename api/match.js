@@ -6,7 +6,7 @@ const Anthropic = require("@anthropic-ai/sdk");
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // Use a stable, high-performing model ID
-const CLAUDE_MODEL = "claude-3-5-sonnet-20240620";
+const CLAUDE_MODEL = "claude-sonnet-4-6";
 
 async function getGoogleSheetsToken() {
   const { google } = require("googleapis");
