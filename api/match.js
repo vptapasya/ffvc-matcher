@@ -1,13 +1,12 @@
 // api/match.js — FFVC Job Matcher serverless function
-// Handles: Google Sheets read → parallel scrape → AI extraction → AI matching
-
 const fetch = require("node-fetch");
 const cheerio = require("cheerio");
 const Anthropic = require("@anthropic-ai/sdk");
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// ─── Google Sheets ────────────────────────────────────────────────────────────
+// Use a stable, high-performing model ID
+const CLAUDE_MODEL = "claude-3-5-sonnet-20240620";
 
 async function getGoogleSheetsToken() {
   const { google } = require("googleapis");
@@ -36,8 +35,6 @@ async function getCompanies() {
     .filter((c) => c.name && c.careersUrl);
 }
 
-// ─── ATS detection ────────────────────────────────────────────────────────────
-
 const LINKEDIN_RE = /linkedin\.com/i;
 const TIMEOUT_MS = 15000;
 
@@ -52,8 +49,6 @@ function detectATS(url) {
   if (/jobs\.gem\.com/i.test(url))   return "gem";
   return "html";
 }
-
-// ─── ATS-specific fetchers ────────────────────────────────────────────────────
 
 async function fetchJSON(url, headers = {}) {
   const controller = new AbortController();
@@ -72,51 +67,24 @@ async function fetchJSON(url, headers = {}) {
   }
 }
 
-// Extract slug from URL for various ATS
 function extractSlug(url, atsType) {
   try {
     const u = new URL(url);
     const parts = u.pathname.replace(/^\/+|\/+$/g, "").split("/");
-    if (atsType === "greenhouse") {
-      // https://job-boards.greenhouse.io/addepar1  → addepar1
-      // https://boards.greenhouse.io/addepar1      → addepar1
-      return parts[0];
-    }
-    if (atsType === "lever") {
-      // https://jobs.lever.co/company → company
-      return parts[0];
-    }
-    if (atsType === "ashby") {
-      // https://jobs.ashbyhq.com/rescale → rescale
-      return parts[0];
-    }
-    if (atsType === "workable") {
-      // https://apply.workable.com/manna-1/ → manna-1
-      return parts[0];
-    }
-    if (atsType === "breezy") {
-      // https://barn2door-inc.breezy.hr/ → barn2door-inc (subdomain)
-      return u.hostname.split(".")[0];
-    }
-    if (atsType === "bamboohr") {
-      // https://rhinolabs.bamboohr.com/careers → rhinolabs
-      return u.hostname.split(".")[0];
-    }
-    if (atsType === "gem") {
-      // https://jobs.gem.com/civrobotics-com → civrobotics-com
-      return parts[0];
-    }
-    if (atsType === "peopleforce") {
-      // https://respeecher.peopleforce.io/careers → respeecher
-      return u.hostname.split(".")[0];
-    }
+    if (atsType === "greenhouse") return parts[0];
+    if (atsType === "lever") return parts[0];
+    if (atsType === "ashby") return parts[0];
+    if (atsType === "workable") return parts[0];
+    if (atsType === "breezy") return u.hostname.split(".")[0];
+    if (atsType === "bamboohr") return u.hostname.split(".")[0];
+    if (atsType === "gem") return parts[0];
+    if (atsType === "peopleforce") return u.hostname.split(".")[0];
   } catch {}
   return null;
 }
 
 async function fetchGreenhouseJobs(careersUrl) {
   const slug = extractSlug(careersUrl, "greenhouse");
-  if (!slug) throw new Error("Could not extract Greenhouse slug");
   const data = await fetchJSON(`https://boards-api.greenhouse.io/v1/boards/${slug}/jobs?content=true`);
   return (data.jobs || []).map((j) => ({
     title: j.title,
@@ -129,7 +97,6 @@ async function fetchGreenhouseJobs(careersUrl) {
 
 async function fetchLeverJobs(careersUrl) {
   const slug = extractSlug(careersUrl, "lever");
-  if (!slug) throw new Error("Could not extract Lever slug");
   const data = await fetchJSON(`https://api.lever.co/v0/postings/${slug}?mode=json`);
   return (Array.isArray(data) ? data : []).map((j) => ({
     title: j.text,
@@ -155,9 +122,9 @@ function mapLeverDept(team) {
 
 async function fetchAshbyJobs(careersUrl) {
   const slug = extractSlug(careersUrl, "ashby");
-  if (!slug) throw new Error("Could not extract Ashby slug");
   const data = await fetchJSON(`https://api.ashbyhq.com/posting-api/job-board/${slug}`);
-  return ((data.jobPostings || data.jobs || [])).map((j) => ({
+  const jobs = data.jobPostings || data.jobs || [];
+  return jobs.map((j) => ({
     title: j.title,
     location: (j.location || j.locationName || ""),
     type: mapLeverDept(j.department || j.team || ""),
@@ -168,11 +135,8 @@ async function fetchAshbyJobs(careersUrl) {
 
 async function fetchWorkableJobs(careersUrl) {
   const slug = extractSlug(careersUrl, "workable");
-  if (!slug) throw new Error("Could not extract Workable slug");
-  const data = await fetchJSON(`https://apply.workable.com/api/v3/accounts/${slug}/jobs`, {
-    "Content-Type": "application/json",
-  });
-  return ((data.results || [])).map((j) => ({
+  const data = await fetchJSON(`https://apply.workable.com/api/v3/accounts/${slug}/jobs`, { "Content-Type": "application/json" });
+  return (data.results || []).map((j) => ({
     title: j.title,
     location: [j.city, j.country].filter(Boolean).join(", "),
     type: mapLeverDept(j.department || ""),
@@ -183,7 +147,6 @@ async function fetchWorkableJobs(careersUrl) {
 
 async function fetchBreezyJobs(careersUrl) {
   const slug = extractSlug(careersUrl, "breezy");
-  if (!slug) throw new Error("Could not extract Breezy slug");
   const data = await fetchJSON(`https://${slug}.breezy.hr/json`);
   return (Array.isArray(data) ? data : []).map((j) => ({
     title: j.name,
@@ -196,11 +159,7 @@ async function fetchBreezyJobs(careersUrl) {
 
 async function fetchBambooJobs(careersUrl) {
   const slug = extractSlug(careersUrl, "bamboohr");
-  if (!slug) throw new Error("Could not extract BambooHR slug");
-  const data = await fetchJSON(`https://api.bamboohr.com/api/gateway.php/${slug}/v1/applicant_tracking/jobs`, {
-    Accept: "application/json",
-  });
-  // BambooHR public jobs endpoint
+  const data = await fetchJSON(`https://api.bamboohr.com/api/gateway.php/${slug}/v1/applicant_tracking/jobs`, { Accept: "application/json" });
   const jobs = data.result || data || [];
   return (Array.isArray(jobs) ? jobs : []).map((j) => ({
     title: j.jobOpening && j.jobOpening.jobOpeningName || j.title || "",
@@ -211,21 +170,16 @@ async function fetchBambooJobs(careersUrl) {
   }));
 }
 
-// Fallback: scrape HTML
 async function fetchPage(url, timeoutMs = TIMEOUT_MS) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; FFVCJobMatcher/1.0; +https://ffvc.com)",
-        Accept: "text/html,application/xhtml+xml",
-      },
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; FFVCJobMatcher/1.0)", Accept: "text/html" },
       redirect: "follow",
     });
     clearTimeout(timer);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.text();
   } catch (err) {
     clearTimeout(timer);
@@ -235,266 +189,85 @@ async function fetchPage(url, timeoutMs = TIMEOUT_MS) {
 
 function extractTextFromHtml(html) {
   const $ = cheerio.load(html);
-  $("script, style, nav, footer, header, [aria-hidden='true']").remove();
-  const jobSelectors = ["[class*='job']","[class*='career']","[class*='position']","[class*='opening']","[class*='role']","main","article","#content",".content"];
-  let text = "";
-  for (const sel of jobSelectors) {
-    const el = $(sel);
-    if (el.length) text += el.text() + "\n";
-  }
-  if (!text.trim()) text = $("body").text();
-  return text.replace(/\s+/g, " ").trim().slice(0, 12000);
+  $("script, style, nav, footer, header").remove();
+  return $("body").text().replace(/\s+/g, " ").trim().slice(0, 10000);
 }
-
-function findNextPageUrl(html, baseUrl) {
-  const $ = cheerio.load(html);
-  const nextLink = $("a[rel='next'], a:contains('Next'), a:contains('next'), .pagination a[href]")
-    .filter((_, el) => {
-      const text = $(el).text().toLowerCase().trim();
-      return text === "next" || text === "next page" || $(el).attr("rel") === "next";
-    })
-    .first().attr("href");
-  if (!nextLink) return null;
-  try { return new URL(nextLink, baseUrl).href; } catch { return null; }
-}
-
-// ─── Main scrape dispatcher ───────────────────────────────────────────────────
 
 async function scrapeCompany(company) {
   const { name, careersUrl } = company;
-
-  if (LINKEDIN_RE.test(careersUrl)) {
-    return { company: name, jobs: [], skipped: true, reason: "LinkedIn URL — manual review required" };
-  }
-
+  if (LINKEDIN_RE.test(careersUrl)) return { company: name, jobs: [], skipped: true, reason: "LinkedIn URL" };
   const ats = detectATS(careersUrl);
-
-  // ATS API path — returns structured jobs directly, skip AI extraction
-  if (ats !== "html") {
-    try {
-      let jobs = [];
-      if (ats === "greenhouse")  jobs = await fetchGreenhouseJobs(careersUrl);
-      else if (ats === "lever")  jobs = await fetchLeverJobs(careersUrl);
-      else if (ats === "ashby")  jobs = await fetchAshbyJobs(careersUrl);
-      else if (ats === "workable") jobs = await fetchWorkableJobs(careersUrl);
-      else if (ats === "breezy") jobs = await fetchBreezyJobs(careersUrl);
-      else if (ats === "bamboohr") jobs = await fetchBambooJobs(careersUrl);
-      // gem + peopleforce fall through to HTML scrape
-      else {
-        const html = await fetchPage(careersUrl);
-        return { company: name, careersUrl, ats, text: extractTextFromHtml(html), pages: 1 };
-      }
-      // Return pre-structured jobs (bypass AI extraction)
-      return { company: name, careersUrl, ats, structuredJobs: jobs.map(j => ({ ...j, company: name })) };
-    } catch (err) {
-      // Fall back to HTML scrape on API failure
-      console.error(`ATS API failed for ${name} (${ats}): ${err.message} — falling back to HTML`);
-    }
-  }
-
-  // HTML scrape path
-  const allText = [];
-  let url = careersUrl;
-  let pages = 0;
   try {
-    while (url && pages < 10) {
-      const html = await fetchPage(url);
-      allText.push(extractTextFromHtml(html));
-      const next = findNextPageUrl(html, url);
-      url = next !== url ? next : null;
-      pages++;
-    }
+    if (ats === "greenhouse") return { company: name, careersUrl, ats, structuredJobs: await fetchGreenhouseJobs(careersUrl) };
+    if (ats === "lever") return { company: name, careersUrl, ats, structuredJobs: await fetchLeverJobs(careersUrl) };
+    if (ats === "ashby") return { company: name, careersUrl, ats, structuredJobs: await fetchAshbyJobs(careersUrl) };
+    if (ats === "workable") return { company: name, careersUrl, ats, structuredJobs: await fetchWorkableJobs(careersUrl) };
+    if (ats === "breezy") return { company: name, careersUrl, ats, structuredJobs: await fetchBreezyJobs(careersUrl) };
+    if (ats === "bamboohr") return { company: name, careersUrl, ats, structuredJobs: await fetchBambooJobs(careersUrl) };
+    const html = await fetchPage(careersUrl);
+    return { company: name, careersUrl, ats: "html", text: extractTextFromHtml(html) };
   } catch (err) {
     return { company: name, jobs: [], error: err.message };
   }
-  const combinedText = allText.join("\n---PAGE BREAK---\n").slice(0, 20000);
-  return { company: name, careersUrl, ats: "html", text: combinedText, pages };
 }
-
-// ─── AI: Job Extraction (HTML fallback only) ──────────────────────────────────
 
 async function extractJobsFromText(company, text, careersUrl) {
-  const prompt = `Extract all job listings from this careers page content for company "${company}".
-Return ONLY valid JSON array: [{"title":"...","location":"...","type":"...","description":"...","link":"..."}]
-Type must be one of: Engineering, Product, Design, Sales, Operations, Data, Marketing, Other
-For link: use full URL if found, otherwise use "${careersUrl}"
-Return [] if no jobs found. No markdown, no explanation.
-
-CONTENT:
-${text}`;
-
-  try {
-    const msg = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 2000,
-      messages: [{ role: "user", content: prompt }],
-    });
-    const raw = msg.content[0].text.trim();
-    const clean = raw.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
-    const jobs = JSON.parse(clean);
-    return Array.isArray(jobs) ? jobs.map((j) => ({ ...j, company })) : [];
-  } catch {
-    return [];
-  }
+  const prompt = `Extract job listings for "${company}". Return JSON array: [{"title","location","type","description","link"}]`;
+  const msg = await anthropic.messages.create({
+    model: CLAUDE_MODEL,
+    max_tokens: 2000,
+    messages: [{ role: "user", content: prompt + "\n\nCONTENT:\n" + text }],
+  });
+  return JSON.parse(msg.content[0].text.replace(/```json|```/g, ""));
 }
-
-// ─── AI: Resume Matching ──────────────────────────────────────────────────────
 
 async function matchResumeToJobs(resume, allJobs) {
-  const jobsJson = JSON.stringify(
-    allJobs.map((j, i) => ({ id: i, title: j.title, company: j.company, location: j.location, type: j.type, description: (j.description || "").slice(0, 300) }))
-  );
-
-  const prompt = `You are a recruiter at a top VC firm. Analyze this resume against these job listings.
-
-RESUME:
-${resume.slice(0, 6000)}
-
-JOBS (JSON):
-${jobsJson}
-
-Return ONLY valid JSON (no markdown):
-{
-  "summary": "2-3 sentence candidate profile",
-  "skills": ["skill1", "skill2", ...],
-  "matches": [
-    {
-      "id": <job id from input>,
-      "score": <0-100>,
-      "reason": "<one sentence why this is a match or mismatch>",
-      "matchedSkills": ["skill1", ...]
-    }
-  ]
-}
-
-Include ALL jobs in matches array, sorted by score descending. Be precise and honest about fit.`;
-
+  console.log(`Calling Anthropic for matching with ${allJobs.length} jobs...`);
+  const prompt = `Match resume against these jobs. Return JSON: { summary, skills, matches: [{ id, score, reason, matchedSkills }] }`;
   const msg = await anthropic.messages.create({
-    model: "claude-3-5-sonnet-20240620",
+    model: CLAUDE_MODEL,
     max_tokens: 4000,
-    messages: [{ role: "user", content: prompt }],
+    messages: [{ role: "user", content: prompt + "\n\nRESUME:\n" + resume + "\n\nJOBS:\n" + JSON.stringify(allJobs) }],
   });
-  const raw = msg.content[0].text.trim();
-  const clean = raw.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
-  return JSON.parse(clean);
+  return JSON.parse(msg.content[0].text.replace(/```json|```/g, ""));
 }
-
-// ─── Streaming SSE helper ────────────────────────────────────────────────────
 
 function sendEvent(res, event, data) {
   res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 }
 
-// ─── Main handler ─────────────────────────────────────────────────────────────
-
 module.exports = async function handler(req, res) {
   if (req.method === "OPTIONS") { res.status(200).end(); return; }
-  if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
-
-  let resume = "";
-  try {
-    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-    resume = body.resume || "";
-  } catch {
-    res.status(400).json({ error: "Invalid request body" });
-    return;
-  }
-  if (!resume.trim()) { res.status(400).json({ error: "Resume is required" }); return; }
+  const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+  const resume = body.resume || "";
 
   res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
-  res.setHeader("X-Accel-Buffering", "no");
   res.status(200);
 
   try {
-    sendEvent(res, "status", { step: "sheets", message: "Reading company list from Google Sheets…" });
-    let companies;
-    try {
-      companies = await getCompanies();
-    } catch (err) {
-      sendEvent(res, "error", { message: `Failed to read Google Sheet: ${err.message}` });
-      res.end();
-      return;
-    }
+    const companies = await getCompanies();
+    sendEvent(res, "status", { message: `Scraping ${companies.length} companies...` });
 
-    sendEvent(res, "status", { step: "scraping", message: `Found ${companies.length} active companies. Scraping careers pages…`, total: companies.length });
-
-    let completed = 0;
-    const scrapeResults = await Promise.all(
-      companies.map(async (company) => {
-        const result = await scrapeCompany(company);
-        completed++;
-        sendEvent(res, "progress", {
-          company: company.name,
-          completed,
-          total: companies.length,
-          skipped: !!result.skipped,
-          error: result.error || null,
-          ats: result.ats || null,
-        });
-        return result;
-      })
-    );
-
-    sendEvent(res, "status", { step: "extracting", message: "Extracting job listings…" });
-
-    const jobArrays = await Promise.all(
-      scrapeResults.map(async (r) => {
-        if (r.skipped) return [{ company: r.company, title: "LinkedIn listing", skipped: true, reason: r.reason, link: companies.find(c => c.name === r.company)?.careersUrl }];
-        if (r.error) return [];
-        // ATS API returned structured jobs — no AI extraction needed
-        if (r.structuredJobs) return r.structuredJobs;
-        // HTML path — use AI extraction
-        if (r.text) return extractJobsFromText(r.company, r.text, r.careersUrl);
-        return [];
-      })
-    );
+    const scrapeResults = await Promise.all(companies.map(c => scrapeCompany(c)));
+    const jobArrays = await Promise.all(scrapeResults.map(async r => {
+      if (r.structuredJobs) return r.structuredJobs.map(j => ({ ...j, company: r.company }));
+      if (r.text) return extractJobsFromText(r.company, r.text, r.careersUrl);
+      return [];
+    }));
 
     const allJobs = jobArrays.flat();
-    const realJobs = allJobs.filter((j) => !j.skipped);
-    const skippedJobs = allJobs.filter((j) => j.skipped);
-
-    sendEvent(res, "status", {
-      step: "matching",
-      message: `Found ${realJobs.length} open positions across ${companies.length} companies. Running AI match…`,
-      jobCount: realJobs.length,
-    });
-
-    let matchResult;
-    if (realJobs.length === 0) {
-      matchResult = { summary: "No open positions found.", skills: [], matches: [] };
-    } else {
-      matchResult = await matchResumeToJobs(resume, realJobs);
-    }
-
-    const enrichedMatches = (matchResult.matches || []).map((m) => {
-      const job = realJobs[m.id] || {};
-      return {
-        title: job.title,
-        company: job.company,
-        location: job.location,
-        type: job.type,
-        link: job.link,
-        score: m.score,
-        reason: m.reason,
-        matchedSkills: m.matchedSkills || [],
-      };
-    });
+    const matchResult = allJobs.length ? await matchResumeToJobs(resume, allJobs) : { summary: "No jobs", skills: [], matches: [] };
 
     sendEvent(res, "result", {
-      summary: matchResult.summary,
-      skills: matchResult.skills,
-      matches: enrichedMatches,
-      skipped: skippedJobs,
+      ...matchResult,
+      matches: matchResult.matches.map(m => ({ ...allJobs[m.id], ...m })),
       companiesScraped: companies.length,
-      jobsFound: realJobs.length,
+      jobsFound: allJobs.length
     });
-
     sendEvent(res, "done", {});
   } catch (err) {
+    console.error("Function Error:", err.message);
     sendEvent(res, "error", { message: err.message });
   }
-
   res.end();
 };
