@@ -371,12 +371,33 @@ Include ALL jobs in matches array, sorted by score descending. Be precise and ho
 
   const msg = await anthropic.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 4000,
+    max_tokens: 8000,
     messages: [{ role: "user", content: prompt }],
   });
   const raw = msg.content[0].text.trim();
   const clean = raw.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
-  return JSON.parse(clean);
+  // Repair truncated JSON by finding the last complete match object
+  try {
+    return JSON.parse(clean);
+  } catch {
+    const lastGood = clean.lastIndexOf('},');
+    if (lastGood === -1) throw new Error("Could not parse match results");
+    const repaired = clean.slice(0, lastGood + 1) + ']}}';
+    try {
+      return JSON.parse(repaired);
+    } catch {
+      // Try to extract just what we have
+      const summaryMatch = clean.match(/"summary"\s*:\s*"([^"]+)"/);
+      const skillsMatch = clean.match(/"skills"\s*:\s*(\[[^\]]+\])/);
+      const matchesEnd = clean.lastIndexOf('},');
+      const matchesStr = matchesEnd > -1 ? clean.slice(clean.indexOf('"matches"') + 11, matchesEnd + 1) + ']' : '[]';
+      return {
+        summary: summaryMatch ? summaryMatch[1] : "Profile analyzed.",
+        skills: skillsMatch ? JSON.parse(skillsMatch[1]) : [],
+        matches: JSON.parse(matchesStr) || []
+      };
+    }
+  }
 }
 
 // ─── Streaming SSE helper ────────────────────────────────────────────────────
