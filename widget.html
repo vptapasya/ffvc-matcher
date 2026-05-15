@@ -3,25 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FFVC Job Matcher</title>
+<title>ffvc Job Matcher</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0a0f;
-    --surface: #111118;
-    --surface2: #18181f;
-    --border: #22222e;
-    --border2: #2d2d3d;
-    --text: #e8e8f0;
-    --text2: #9090a8;
-    --text3: #5a5a72;
-    --accent: #6366f1;
-    --accent2: #818cf8;
-    --accent-glow: rgba(99,102,241,0.15);
+    --bg: #ffffff;
+    --surface: #f8f9f8;
+    --surface2: #f0f4f0;
+    --border: #e2e8e2;
+    --border2: #c8d8c8;
+    --text: #111811;
+    --text2: #3d4d3d;
+    --text3: #7a8f7a;
+    --accent: #16a34a;
+    --accent2: #22c55e;
+    --accent-glow: rgba(22,163,74,0.12);
     --green: #22c55e;
-    --amber: #f59e0b;
-    --red: #ef4444;
+    --amber: #d97706;
+    --red: #dc2626;
     --radius: 12px;
     --radius-lg: 18px;
   }
@@ -78,10 +78,7 @@
     line-height: 1.1;
     letter-spacing: -0.5px;
     margin-bottom: 14px;
-    background: linear-gradient(135deg, #e8e8f0 0%, #9090a8 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #111811;
   }
 
   .w-sub {
@@ -160,7 +157,7 @@
   .w-btn:hover:not(:disabled) {
     background: var(--accent2);
     transform: translateY(-1px);
-    box-shadow: 0 8px 32px rgba(99,102,241,0.3);
+    box-shadow: 0 8px 32px rgba(22,163,74,0.3);
   }
 
   .w-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
@@ -254,8 +251,8 @@
   }
 
   .w-profile-card {
-    background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, transparent 60%);
-    border: 1px solid rgba(99,102,241,0.25);
+    background: linear-gradient(135deg, rgba(22,163,74,0.08) 0%, transparent 60%);
+    border: 1px solid rgba(22,163,74,0.25);
     border-radius: var(--radius-lg);
     padding: 24px;
     margin-bottom: 20px;
@@ -312,7 +309,7 @@
   .w-stat-num {
     font-family: 'DM Serif Display', serif;
     font-size: 28px;
-    color: var(--accent2);
+    color: var(--accent);
     line-height: 1;
     margin-bottom: 4px;
   }
@@ -369,12 +366,12 @@
 
   .w-job-card:hover {
     border-color: var(--border2);
-    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   }
 
   .w-job-card.top-match {
-    border-color: rgba(99,102,241,0.3);
-    background: linear-gradient(135deg, rgba(99,102,241,0.05) 0%, var(--surface) 50%);
+    border-color: rgba(22,163,74,0.3);
+    background: linear-gradient(135deg, rgba(22,163,74,0.05) 0%, var(--surface) 50%);
   }
 
   .w-job-top {
@@ -468,8 +465,8 @@
   }
 
   .w-job-skill {
-    background: rgba(99,102,241,0.1);
-    border: 1px solid rgba(99,102,241,0.2);
+    background: rgba(22,163,74,0.1);
+    border: 1px solid rgba(22,163,74,0.2);
     border-radius: 4px;
     padding: 2px 8px;
     font-size: 11px;
@@ -542,7 +539,7 @@
     border: 1px solid rgba(239,68,68,0.25);
     border-radius: var(--radius);
     padding: 16px 20px;
-    color: #fca5a5;
+    color: var(--red);
     font-size: 14px;
     margin-top: 16px;
     display: none;
@@ -631,7 +628,7 @@
           </div>
           <div class="w-stat">
             <div class="w-stat-num" id="stat-top">—</div>
-            <div class="w-stat-label">Strong matches (≥70)</div>
+            <div class="w-stat-label">Strong matches (&ge;70)</div>
           </div>
         </div>
 
@@ -651,7 +648,7 @@
       <div class="w-jobs" id="w-jobs"></div>
 
       <div class="w-skipped-section" id="w-skipped-section" style="display:none">
-        <div class="w-skipped-title">⚠ Companies flagged for manual review</div>
+        <div class="w-skipped-title">&#9888; Companies flagged for manual review</div>
         <div id="w-skipped-list"></div>
       </div>
 
@@ -852,7 +849,7 @@
       data.skipped.forEach(s => {
         const el = document.createElement('div');
         el.className = 'w-skipped-item';
-        el.innerHTML = `<span style="color:var(--amber)">⚠</span> <strong>${escHtml(s.company)}</strong> — ${escHtml(s.reason || 'Manual review needed')}`;
+        el.innerHTML = `<span style="color:var(--amber)">&#9888;</span> <strong>${escHtml(s.company)}</strong> — ${escHtml(s.reason || 'Manual review needed')}`;
         list.appendChild(el);
       });
     }
