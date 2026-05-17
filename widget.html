@@ -55,21 +55,10 @@
     margin-bottom: 24px;
   }
 
-  .w-logo-mark {
-    width: 36px; height: 36px;
-    background: var(--accent);
-    border-radius: 8px;
-    display: grid;
-    place-items: center;
-    box-shadow: 0 0 20px var(--accent-glow);
-  }
-
-  .w-logo-mark svg { width: 20px; height: 20px; }
-
-  .w-logo-text {
-    font-family: 'DM Serif Display', serif;
-    font-size: 22px;
-    letter-spacing: -0.3px;
+  .w-logo-img {
+    height: 56px;
+    width: auto;
+    display: block;
   }
 
   .w-headline {
@@ -309,7 +298,7 @@
   .w-stat-num {
     font-family: 'DM Serif Display', serif;
     font-size: 28px;
-    color: var(--accent);
+    color: var(--accent2);
     line-height: 1;
     margin-bottom: 4px;
   }
@@ -366,7 +355,7 @@
 
   .w-job-card:hover {
     border-color: var(--border2);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
   }
 
   .w-job-card.top-match {
@@ -539,7 +528,7 @@
     border: 1px solid rgba(239,68,68,0.25);
     border-radius: var(--radius);
     padding: 16px 20px;
-    color: var(--red);
+    color: #fca5a5;
     font-size: 14px;
     margin-top: 16px;
     display: none;
@@ -560,16 +549,10 @@
     <!-- Header -->
     <div class="w-header">
       <div class="w-logo">
-        <div class="w-logo-mark">
-          <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 16L10 4L16 16" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M6.5 11.5h7" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <span class="w-logo-text">FFVC</span>
+        <img src="data:image/png;base64,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" alt="ffvc" class="w-logo-img" />
       </div>
       <h1 class="w-headline">Find your role in<br><em>our portfolio</em></h1>
-      <p class="w-sub">Paste your resume and we'll match you against every open position across the FFVC portfolio — live, right now.</p>
+      <p class="w-sub">Paste your resume and we'll match you against every open position across the ffvc portfolio — live, right now.</p>
     </div>
 
     <!-- Input -->
@@ -628,7 +611,7 @@
           </div>
           <div class="w-stat">
             <div class="w-stat-num" id="stat-top">—</div>
-            <div class="w-stat-label">Strong matches (&ge;70)</div>
+            <div class="w-stat-label">Strong matches (≥70)</div>
           </div>
         </div>
 
@@ -648,7 +631,7 @@
       <div class="w-jobs" id="w-jobs"></div>
 
       <div class="w-skipped-section" id="w-skipped-section" style="display:none">
-        <div class="w-skipped-title">&#9888; Companies flagged for manual review</div>
+        <div class="w-skipped-title">⚠ Companies flagged for manual review</div>
         <div id="w-skipped-list"></div>
       </div>
 
@@ -665,15 +648,16 @@
 
 <script>
 (function() {
-  // ── CONFIG: replace with your Vercel deployment URL after deploying ──
-  const API_URL = 'https://ffvc-matcher.vercel.app/api/match';
+  const SCRAPE_URL = 'https://ffvc-matcher.vercel.app/api/scrape';
+  const MATCH_URL  = 'https://ffvc-matcher.vercel.app/api/match';
 
-  // ── State ──
   let allMatches = [];
   let activeFilter = 'all';
   let progressItems = {};
+  let totalCompanies = 0;
+  let jobsFound = 0;
+  let skippedList = [];
 
-  // ── Elements ──
   const $ = id => document.getElementById(id);
   const inputSection   = $('ffvc-input');
   const loadingSection = $('ffvc-loading');
@@ -683,21 +667,127 @@
   // ── Submit ──
   $('w-submit').addEventListener('click', async () => {
     const resume = $('w-resume').value.trim();
-    if (!resume) {
-      showError('Please paste your resume before submitting.');
-      return;
-    }
+    if (!resume) { showError('Please paste your resume before submitting.'); return; }
     hideError();
-    startLoading();
-    await runMatcher(resume);
+    showSection('loading');
+    $('w-loading-title').textContent = 'Reading company list…';
+    $('w-loading-sub').textContent = 'Connecting to Google Sheets';
+    progressGrid.innerHTML = '';
+    progressItems = {};
+
+    try {
+      // Phase 1: scrape all companies (streams progress)
+      const jobs = await runScrape();
+
+      if (!jobs.length) {
+        showError('No open positions found across the portfolio right now.');
+        showSection('input');
+        return;
+      }
+
+      // Phase 2: AI match (single fast call)
+      $('w-loading-title').textContent = `Matching you against ${jobs.length} open positions…`;
+      $('w-loading-sub').textContent = 'Running AI analysis — almost there';
+
+      const resume = $('w-resume').value.trim();
+      const matchRes = await fetch(MATCH_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resume, jobs }),
+        mode: 'cors',
+        credentials: 'omit',
+      });
+
+      if (!matchRes.ok) throw new Error(`Match error ${matchRes.status}`);
+      const matchData = await matchRes.json();
+
+      renderResults({
+        summary: matchData.summary,
+        skills: matchData.skills,
+        matches: matchData.matches,
+        skipped: skippedList,
+        companiesScraped: totalCompanies,
+        jobsFound,
+      });
+
+    } catch (err) {
+      showSection('input');
+      showError('Something went wrong: ' + err.message);
+    }
   });
 
+  // ── Phase 1: streaming scrape ──
+  async function runScrape() {
+    const resume = $('w-resume').value.trim();
+    const response = await fetch(SCRAPE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resume }),
+      mode: 'cors',
+      credentials: 'omit',
+    });
+
+    if (!response.ok) throw new Error(`Scrape error ${response.status}`);
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let resolvedJobs = [];
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const events = buffer.split('\n\n');
+      buffer = events.pop();
+      for (const raw of events) {
+        const result = parseSSE(raw);
+        if (!result) continue;
+        const { event, data } = result;
+
+        if (event === 'status') {
+          $('w-loading-title').textContent = data.message || '';
+          if (data.total) {
+            totalCompanies = data.total;
+            $('w-loading-sub').textContent = `Scanning ${data.total} portfolio companies…`;
+          }
+        }
+        if (event === 'progress') {
+          updateProgress(data);
+        }
+        if (event === 'jobs') {
+          resolvedJobs = data.jobs || [];
+          jobsFound = data.jobsFound || resolvedJobs.length;
+          skippedList = data.skipped || [];
+        }
+        if (event === 'error') {
+          throw new Error(data.message || 'Scrape failed');
+        }
+      }
+    }
+
+    return resolvedJobs;
+  }
+
+  function parseSSE(raw) {
+    const lines = raw.split('\n');
+    let event = 'message', dataStr = '';
+    for (const line of lines) {
+      if (line.startsWith('event: ')) event = line.slice(7).trim();
+      if (line.startsWith('data: ')) dataStr = line.slice(6).trim();
+    }
+    if (!dataStr) return null;
+    try { return { event, data: JSON.parse(dataStr) }; } catch { return null; }
+  }
+
+  // ── Reset ──
   $('w-reset').addEventListener('click', () => {
     showSection('input');
     allMatches = [];
     progressItems = {};
     progressGrid.innerHTML = '';
     $('w-jobs').innerHTML = '';
+    $('w-skipped-section').style.display = 'none';
   });
 
   // ── Filter buttons ──
@@ -717,96 +807,9 @@
     resultsSection.style.display = section === 'results' ? 'block' : 'none';
   }
 
-  function startLoading() {
-    showSection('loading');
-    $('w-loading-title').textContent = 'Reading company list…';
-    $('w-loading-sub').textContent = 'Connecting to Google Sheets';
-  }
-
-  // ── Main fetch ──
-  async function runMatcher(resume) {
-    try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resume }),
-        mode: 'cors',
-        credentials: 'omit',
-      });
-
-      if (!response.ok) {
-        const err = await response.text();
-        throw new Error(`Server error ${response.status}: ${err}`);
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const events = buffer.split('\n\n');
-        buffer = events.pop();
-        for (const raw of events) {
-          parseSSE(raw);
-        }
-      }
-    } catch (err) {
-      showSection('input');
-      showError('Something went wrong: ' + err.message);
-    }
-  }
-
-  function parseSSE(raw) {
-    const lines = raw.split('\n');
-    let event = 'message', dataStr = '';
-    for (const line of lines) {
-      if (line.startsWith('event: ')) event = line.slice(7).trim();
-      if (line.startsWith('data: ')) dataStr = line.slice(6).trim();
-    }
-    if (!dataStr) return;
-    let data;
-    try { data = JSON.parse(dataStr); } catch { return; }
-    handleEvent(event, data);
-  }
-
-  function handleEvent(event, data) {
-    switch (event) {
-      case 'status':
-        $('w-loading-title').textContent = data.message || '';
-        if (data.step === 'scraping' && data.total) {
-          $('w-loading-sub').textContent = `Scraping ${data.total} companies in parallel…`;
-        } else if (data.step === 'extracting') {
-          $('w-loading-sub').textContent = 'Using AI to extract structured job listings…';
-        } else if (data.step === 'matching') {
-          $('w-loading-sub').textContent = `Ranking ${data.jobCount} positions against your resume…`;
-        }
-        break;
-
-      case 'progress':
-        updateProgress(data);
-        break;
-
-      case 'result':
-        renderResults(data);
-        break;
-
-      case 'error':
-        showSection('input');
-        showError(data.message || 'An unknown error occurred.');
-        break;
-
-      case 'done':
-        // handled by result event
-        break;
-    }
-  }
-
   // ── Progress ──
   function updateProgress(data) {
-    const { company, skipped, error } = data;
+    const { company, skipped, error, jobsFound: jf } = data;
     let item = progressItems[company];
     if (!item) {
       item = document.createElement('div');
@@ -819,13 +822,16 @@
     if (skipped) item.classList.add('skip');
     else if (error) item.classList.add('err');
     else item.classList.add('done');
+
+    // Update sub-text with running count
+    const done = Object.values(progressItems).filter(el => el.classList.contains('done') || el.classList.contains('skip') || el.classList.contains('err')).length;
+    $('w-loading-sub').textContent = `${done} of ${totalCompanies} companies scanned…`;
   }
 
   // ── Render results ──
   function renderResults(data) {
     allMatches = data.matches || [];
 
-    // Profile
     $('w-summary').textContent = data.summary || '';
     const skillsEl = $('w-skills');
     skillsEl.innerHTML = '';
@@ -836,12 +842,10 @@
       skillsEl.appendChild(tag);
     });
 
-    // Stats
     $('stat-companies').textContent = data.companiesScraped || '—';
     $('stat-jobs').textContent = data.jobsFound || allMatches.length;
     $('stat-top').textContent = allMatches.filter(m => m.score >= 70).length;
 
-    // Skipped
     if (data.skipped && data.skipped.length > 0) {
       $('w-skipped-section').style.display = 'block';
       const list = $('w-skipped-list');
@@ -849,7 +853,7 @@
       data.skipped.forEach(s => {
         const el = document.createElement('div');
         el.className = 'w-skipped-item';
-        el.innerHTML = `<span style="color:var(--amber)">&#9888;</span> <strong>${escHtml(s.company)}</strong> — ${escHtml(s.reason || 'Manual review needed')}`;
+        el.innerHTML = `<span style="color:var(--amber)">⚠</span> <strong>${escHtml(s.company)}</strong> — ${escHtml(s.reason || 'Manual review needed')}`;
         list.appendChild(el);
       });
     }
@@ -915,11 +919,9 @@
             </svg>
           </span>` : ''}
       `;
-
       container.appendChild(card);
     });
 
-    // Animate score bars
     requestAnimationFrame(() => {
       container.querySelectorAll('.w-score-fill').forEach(el => {
         const pct = el.dataset.pct;
@@ -930,18 +932,14 @@
 
   function scoreColor(score) {
     if (score >= 80) return '#22c55e';
-    if (score >= 60) return '#6366f1';
+    if (score >= 60) return '#16a34a';
     if (score >= 40) return '#f59e0b';
     return '#6b7280';
   }
 
   function escHtml(str) {
     if (!str) return '';
-    return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
   function showError(msg) {
@@ -950,11 +948,8 @@
     el.style.display = 'block';
   }
 
-  function hideError() {
-    $('w-error').style.display = 'none';
-  }
+  function hideError() { $('w-error').style.display = 'none'; }
 
-  // Initial state
   showSection('input');
 })();
 </script>
